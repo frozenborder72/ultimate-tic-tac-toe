@@ -11,8 +11,41 @@
  */
 
 // DECLARE MAIN ARRAY AND SET IT TO []
+const boardEl = document.querySelector('#board');
+const slotsDivs = [];
+const slotsCount = 9;
+for (let i = 0; i < slotsCount; i++) {
+  const slot = document.createElement('div');
+  slot.classList.add('slot');
+  boardEl.appendChild(slot);
+}
 
 // FOR EVERY BOARD MAKE AN ARRAY OF 9 DIVS AND PUSH IT INTO MAIN ARRAY
+const winningPossibilities = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
+];
+
+const board = {
+  playerChoices: [0, 1, 2],
+  isPlayable: true,
+};
+
+const checkIfWin = board => {
+  const win = winningPossibilities.filter(possibility =>
+    possibility.every(index => board.playerChoices.includes(index))
+  );
+
+  return win.length > 0;
+};
+
+console.log(checkIfWin(board));
 
 // APPLY CLASSES FOR STYLING AND IDS BASED ON THE MAIN ARRAY INDEXES TO IDENTIFY THEM
 
