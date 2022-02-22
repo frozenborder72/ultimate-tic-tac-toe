@@ -14,7 +14,7 @@ const boardCount = 9;
 
 for (let i = 0; i < boardCount; i++) {
   const boardEl = document.createElement('div');
-  boardEl.setAttribute('data-index', i);
+  boardEl.setAttribute('data-index', i + 1);
   boardEl.classList.add('board');
   megaBoardEl.appendChild(boardEl);
 }
@@ -31,7 +31,8 @@ domBoards.forEach(board => {
 
 // GAME STATE
 class Player {
-  constructor(name, marker) {
+  constructor(id, name, marker) {
+    this.id = id;
     this.name = name;
     this.marker = marker;
     this.wins = [];
@@ -53,16 +54,6 @@ class Player {
 // console.log(logicBoards);
 
 const logicBoards = [
-  {
-    id: 0,
-    'Player 1': {
-      choices: [],
-    },
-    'Player 2': {
-      choices: [],
-    },
-    isPlayable: true,
-  },
   {
     id: 1,
     'Player 1': {
@@ -143,6 +134,16 @@ const logicBoards = [
     },
     isPlayable: true,
   },
+  {
+    id: 9,
+    'Player 1': {
+      choices: [],
+    },
+    'Player 2': {
+      choices: [],
+    },
+    isPlayable: true,
+  },
 ];
 
 const winningPossibilities = [
@@ -157,27 +158,31 @@ const winningPossibilities = [
 ];
 
 // GAME LOGIC
-const player1 = new Player('Player 1', 'X');
-const player2 = new Player('Player 2', 'O');
+const player1 = new Player(0, 'Player 1', 'X');
+const player2 = new Player(1, 'Player 2', 'O');
 
 let player = player1;
 let playBoard = null;
+let logicBoardsAvailable = logicBoards;
+let playableBoards = [...domBoards];
 
-domBoards.forEach((board, index) => {
+playableBoards.forEach((board, index) => {
   [...board.children].forEach((slot, i) => {
-    slot.addEventListener('click', () => {
+    slot.addEventListener('click', e => {
       playBoard = logicBoards[index];
-      console.log(playBoard);
       playBoard[player.name].choices.push(i);
       slot.classList.add('taken');
       slot.textContent = player.marker;
       if (checkIfWin(playBoard, player)) {
         h1.textContent = `${player.name} wins`;
+        slot.parentElement.classList.add('non-playable');
         player.wins.push(index);
-        console.log(playBoard);
         playBoard.isPlayable = false;
+        playableBoards = setPlayableBoards([...domBoards]);
+        allPlayable(playableBoards);
       } else if (isFullBoard(board)) {
         playBoard.isPlayable = false;
+        playableBoards = setPlayableBoards([...domBoards]);
       } else {
         nextBoard(index, i);
       }
@@ -196,38 +201,41 @@ const checkIfWin = (board, player) =>
 const isFullBoard = board =>
   [...board.children].every(slot => slot.classList.contains('taken'));
 
-const playableBoards = [...domBoards].filter((board, i) => {
-  if (logicBoards[i].isPlayable) {
-    return board;
-  }
-});
+const setPlayableBoards = boards => {
+  logicBoardsAvailable = logicBoards.filter(board => board.isPlayable);
+  const playableBoardsIds = logicBoardsAvailable.map(board => board.id);
 
-console.log(playableBoards);
+  return boards.filter(board =>
+    playableBoardsIds.includes(parseInt(board.dataset.index))
+  );
+};
 
-const allPlayable = boardsArray =>
-  boardsArray.forEach((board, i) => {
-    board.isPlayable = true;
-    domBoards[i].classList.remove('non-playable');
+const allPlayable = boards =>
+  boards.forEach(board => {
+    board.classList.remove('non-playable');
   });
 
-const nextBoard = (prevBoard, index) => {
-  if (prevBoard === index) {
-    allPlayable(playableBoards);
-    domBoards[index].classList.add('non-playable');
-  } else {
-    domBoards.forEach((board, i) => {
-      if (i !== index) {
-        board.classList.add('non-playable');
-      }
-    });
-    if (!logicBoards[index].isPlayable || isFullBoard(domBoards[index])) {
-      allPlayable(playableBoards);
+const selectAllButOne = (playBoard, index, action1, action2) => {
+  playBoard.forEach(board => board.classList[action1]('non-playable'));
+  playBoard[index].classList[action2]('non-playable');
+};
+
+const existsPlayBoard = index =>
+  logicBoardsAvailable.some(board => board.id === index + 1);
+
+const nextBoard = (i, index) => {
+  if (i !== index) {
+    if (existsPlayBoard(index)) {
+      playBoard = logicBoardsAvailable[index];
+      selectAllButOne(playableBoards, index, 'add', 'remove');
     } else {
-      playBoard = logicBoards[index];
-      domBoards[index].classList.remove('non-playable');
+      allPlayable(playableBoards);
+      [...domBoards][i].classList.add('non-playable');
     }
+  } else {
+    allPlayable(playableBoards);
+    [...domBoards][i].classList.add('non-playable');
   }
-  // console.log(playableBoards);
 };
 
 allPlayable(playableBoards);

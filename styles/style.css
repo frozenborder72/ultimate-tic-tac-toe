@@ -37,6 +37,7 @@ h1 {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 33%);
   border: 5px solid #0d1321;
+  cursor: pointer;
 }
 
 .board > div {
@@ -46,4 +47,5 @@ h1 {
 .non-playable,
 .non-playable > div {
   border: 1px solid rgba(13, 19, 33, 0.4);
+  cursor: not-allowed;
 }
