@@ -42,10 +42,35 @@ h1 {
 
 .board > div {
   border: 1px solid #0d1321;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.8rem;
+  color: #748cab;
 }
 
 .non-playable,
 .non-playable > div {
   border: 1px solid rgba(13, 19, 33, 0.4);
   cursor: not-allowed;
+}
+
+.restart {
+  display: inline-block;
+  background-color: #f0ebd8;
+  border: 3px solid #0d1321;
+  border-radius: 0.2em;
+  color: #0d1321;
+  padding: 0.25em 0.75em;
+  font-size: 1.5rem;
+  margin-top: 1em;
+  cursor: pointer;
+  transition: all 0.3s linear;
+}
+
+.restart:hover,
+.restart:focus {
+  outline: none;
+  color: #f0ebd8;
+  background-color: #0d1321;
 }

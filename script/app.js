@@ -1,13 +1,12 @@
 /**
  * TODOS
  *  - CHECK IF SLOT IS ALREADY TAKEN
- *  - GENERALIZE CHECKIFWIN FUNCTION TO USE IT ALSO WITH MEGABOARD
- *  - TURN BOARD INTO A CLASS AND MEGABOARD INTO A CLASS THAT EXTENDS BOARD
  *  - REMOVE EVENTLISTENERS FROM UNPLAYABLE BOARDS
  */
 
 // DOM SHIT
 const h1 = document.querySelector('h1');
+const restartBtn = document.querySelector('#restart');
 const megaBoardEl = document.querySelector('#mega-board');
 const slotsDivs = [];
 const boardCount = 9;
@@ -39,112 +38,20 @@ class Player {
   }
 }
 
-// const logicBoards = new Array(9)
-//   .fill({
-//     'Player 1': {
-//       choices: [],
-//     },
-//     'Player 2': {
-//       choices: [],
-//     },
-//     isPlayable: true,
-//   })
-//   .map((board, i) => ({ ...board, id: i }));
+const logicBoards = new Array(boardCount).fill(true).reduce((acc, item, i) => {
+  return acc.concat({
+    id: i + 1,
+    'Player 1': {
+      choices: [],
+    },
+    'Player 2': {
+      choices: [],
+    },
+    isPlayable: true,
+  });
+}, []);
 
-// console.log(logicBoards);
-
-const logicBoards = [
-  {
-    id: 1,
-    'Player 1': {
-      choices: [],
-    },
-    'Player 2': {
-      choices: [],
-    },
-    isPlayable: true,
-  },
-  {
-    id: 2,
-    'Player 1': {
-      choices: [],
-    },
-    'Player 2': {
-      choices: [],
-    },
-    isPlayable: true,
-  },
-  {
-    id: 3,
-    'Player 1': {
-      choices: [],
-    },
-    'Player 2': {
-      choices: [],
-    },
-    isPlayable: true,
-  },
-  {
-    id: 4,
-    'Player 1': {
-      choices: [],
-    },
-    'Player 2': {
-      choices: [],
-    },
-    isPlayable: true,
-  },
-  {
-    id: 5,
-    'Player 1': {
-      choices: [],
-    },
-    'Player 2': {
-      choices: [],
-    },
-    isPlayable: true,
-  },
-  {
-    id: 6,
-    'Player 1': {
-      choices: [],
-    },
-    'Player 2': {
-      choices: [],
-    },
-    isPlayable: true,
-  },
-  {
-    id: 7,
-    'Player 1': {
-      choices: [],
-    },
-    'Player 2': {
-      choices: [],
-    },
-    isPlayable: true,
-  },
-  {
-    id: 8,
-    'Player 1': {
-      choices: [],
-    },
-    'Player 2': {
-      choices: [],
-    },
-    isPlayable: true,
-  },
-  {
-    id: 9,
-    'Player 1': {
-      choices: [],
-    },
-    'Player 2': {
-      choices: [],
-    },
-    isPlayable: true,
-  },
-];
+console.log(logicBoards);
 
 const winningPossibilities = [
   [0, 1, 2],
@@ -161,40 +68,92 @@ const winningPossibilities = [
 const player1 = new Player(0, 'Player 1', 'X');
 const player2 = new Player(1, 'Player 2', 'O');
 
-let player = player1;
+let player;
 let playBoard = null;
 let logicBoardsAvailable = logicBoards;
 let playableBoards = [...domBoards];
 
-playableBoards.forEach((board, index) => {
-  [...board.children].forEach((slot, i) => {
-    slot.addEventListener('click', e => {
-      playBoard = logicBoards[index];
-      playBoard[player.name].choices.push(i);
-      slot.classList.add('taken');
-      slot.textContent = player.marker;
-      if (checkIfWin(playBoard, player)) {
-        h1.textContent = `${player.name} wins`;
-        slot.parentElement.classList.add('non-playable');
-        player.wins.push(index);
-        playBoard.isPlayable = false;
-        playableBoards = setPlayableBoards([...domBoards]);
-        allPlayable(playableBoards);
-      } else if (isFullBoard(board)) {
-        playBoard.isPlayable = false;
-        playableBoards = setPlayableBoards([...domBoards]);
-      } else {
-        nextBoard(index, i);
-      }
+// EVENT LISTENERS FUCKERY
+const startGame = () => {
+  player = player1;
 
-      player = player === player1 ? player2 : player1;
+  playableBoards.forEach((board, index) => {
+    [...board.children].forEach((slot, i) => {
+      slot.addEventListener('click', function handleClick() {
+        playBoard = logicBoards[index];
+        playBoard[player.name].choices = [...playBoard[player.name].choices, i];
+        console.log(logicBoards);
+        slot.classList.add('taken');
+        slot.textContent = player.marker;
+        if (checkIfWin(playBoard[player.name].choices)) {
+          player.wins = [...player.wins, index];
+          if (checkIfWin(player.wins)) {
+            console.log('Player won the game');
+            h1.textContent = `${player.name} wins`;
+          } else {
+            slot.parentElement.classList.add('non-playable');
+            console.log(player.wins);
+            playBoard.isPlayable = false;
+            [...board.children].forEach(slot => {
+              console.log(slot);
+              slot.removeEventListener('click', handleClick);
+            });
+            playableBoards = setPlayableBoards([...domBoards]);
+            allPlayable(playableBoards);
+          }
+        } else if (isFullBoard(board)) {
+          playBoard.isPlayable = false;
+          playableBoards = setPlayableBoards([...domBoards]);
+        } else {
+          slot.removeEventListener('click', handleClick);
+          nextBoard(index, i);
+        }
+
+        player = player === player1 ? player2 : player1;
+      });
     });
   });
+};
+
+restartBtn.addEventListener('click', e => {
+  player1.wins = [];
+  player2.wins = [];
+  logicBoards.forEach(board => {
+    board['Player 1'].choices = [];
+    board['Player 2'].choices = [];
+    board.isPlayable = true;
+  });
+  [...domBoards].forEach(board => {
+    board.classList.remove('non-playable');
+    [...board.children].forEach(slot => {
+      slot.textContent = '';
+      slot.classList.remove('taken');
+    });
+  });
+  h1.textContent = 'Ultimate Tic Tac Toe';
+
+  setPlayableBoards([...domBoards]);
+  startGame();
 });
 
-const checkIfWin = (board, player) =>
+const nextBoard = (i, index) => {
+  if (i !== index) {
+    if (existsPlayBoard(index)) {
+      playBoard = logicBoards[index];
+      selectAllButOne([...domBoards], index, 'add', 'remove');
+    } else {
+      allPlayable(playableBoards);
+      [...domBoards][i].classList.add('non-playable');
+    }
+  } else {
+    allPlayable(playableBoards);
+    [...domBoards][i].classList.add('non-playable');
+  }
+};
+
+const checkIfWin = playerArray =>
   winningPossibilities.filter(possibility =>
-    possibility.every(index => board[player.name].choices.includes(index))
+    possibility.every(index => playerArray.includes(index))
   ).length > 0;
 
 // UTILITY FUNCTIONS
@@ -223,19 +182,5 @@ const selectAllButOne = (playBoard, index, action1, action2) => {
 const existsPlayBoard = index =>
   logicBoardsAvailable.some(board => board.id === index + 1);
 
-const nextBoard = (i, index) => {
-  if (i !== index) {
-    if (existsPlayBoard(index)) {
-      playBoard = logicBoardsAvailable[index];
-      selectAllButOne(playableBoards, index, 'add', 'remove');
-    } else {
-      allPlayable(playableBoards);
-      [...domBoards][i].classList.add('non-playable');
-    }
-  } else {
-    allPlayable(playableBoards);
-    [...domBoards][i].classList.add('non-playable');
-  }
-};
-
 allPlayable(playableBoards);
+startGame();
