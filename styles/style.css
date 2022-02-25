@@ -5,39 +5,49 @@
 }
 
 body {
+  font-family: 'Ubuntu', sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f0ebd8;
+  background-color: #fff;
 }
 
 h1 {
-  font-family: sans-serif;
+  font-weight: 400;
   color: #231942;
+  margin-top: 1em;
   margin-bottom: 1em;
   font-size: 3em;
+}
+
+.title-bounce {
+  animation: titleBounce 0.5s linear infinite;
 }
 
 .mega-board {
   width: 80%;
   max-width: 500px;
   height: 500px;
-  border: 5px solid #231942;
-  border-radius: 1em;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  background-color: #f0ebd8;
+  background-color: #fff;
+  opacity: 0;
+}
+
+.slide {
+  animation: slideBoardIn 0.8s linear forwards;
 }
 
 .board {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 33%);
-  border: 5px solid #0d1321;
+  border: 2px solid #0d1321;
   cursor: pointer;
+  padding: 0.75em;
 }
 
 .board > div {
@@ -46,10 +56,62 @@ h1 {
   justify-content: center;
   align-items: center;
   font-size: 1.8rem;
-  color: #748cab;
+  color: #232931;
 }
 
-.non-playable,
+.board:nth-child(1),
+.board > div:nth-child(1) {
+  border-top: none;
+  border-left: none;
+}
+
+.board:nth-child(2),
+.board > div:nth-child(2) {
+  border-top: none;
+}
+
+.board:nth-child(3),
+.board > div:nth-child(3) {
+  border-top: none;
+  border-right: none;
+}
+
+.animated {
+  animation: shakeBoard 2s linear forwards;
+  border: none;
+}
+
+.board:nth-child(4),
+.board > div:nth-child(4) {
+  border-left: none;
+}
+
+.board:nth-child(6),
+.board > div:nth-child(6) {
+  border-right: none;
+}
+
+.board:nth-child(7),
+.board > div:nth-child(7) {
+  border-left: none;
+  border-bottom: none;
+}
+
+.board:nth-child(8),
+.board > div:nth-child(8) {
+  border-bottom: none;
+}
+
+.board:nth-child(9),
+.board > div:nth-child(9) {
+  border-right: none;
+  border-bottom: none;
+}
+
+.non-playable {
+  background: rgb(211, 211, 211, 0.6);
+}
+
 .non-playable > div {
   border: 1px solid rgba(13, 19, 33, 0.4);
   cursor: not-allowed;
@@ -57,13 +119,13 @@ h1 {
 
 .restart {
   display: inline-block;
-  background-color: #f0ebd8;
+  background-color: #fff;
   border: 3px solid #0d1321;
   border-radius: 0.2em;
   color: #0d1321;
   padding: 0.25em 0.75em;
   font-size: 1.5rem;
-  margin-top: 1em;
+  margin-top: 2em;
   cursor: pointer;
   transition: all 0.3s linear;
 }
@@ -71,6 +133,129 @@ h1 {
 .restart:hover,
 .restart:focus {
   outline: none;
-  color: #f0ebd8;
+  color: #fff;
   background-color: #0d1321;
+}
+
+/* ANIMATION STUFF */
+
+.hidden {
+  visibility: hidden;
+}
+
+@keyframes titleBounce {
+  0% {
+    transform: scale(1);
+  }
+
+  10% {
+    transform: scale(1.01);
+  }
+
+  20% {
+    transform: scale(1.02);
+  }
+
+  30% {
+    transform: scale(1.03);
+  }
+
+  40% {
+    transform: scale(1.04);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  60% {
+    transform: scale(1.04);
+  }
+
+  70% {
+    transform: scale(1.03);
+  }
+
+  80% {
+    transform: scale(1.02);
+  }
+
+  90% {
+    transform: scale(1.01);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shakeBoard {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  10% {
+    transform: rotate(10deg);
+  }
+
+  20% {
+    transform: rotate(-10deg);
+  }
+
+  30% {
+    transform: rotate(10deg);
+  }
+
+  40% {
+    transform: rotate(-10deg);
+  }
+
+  50% {
+    transform: rotate(10deg);
+  }
+
+  60% {
+    transform: rotate(-10deg);
+  }
+
+  70% {
+    transform: rotate(10deg);
+  }
+
+  80% {
+    transform: rotate(-10deg);
+  }
+
+  90% {
+    transform: rotate(10deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes slideBoardIn {
+  0% {
+    transform: translate(75%);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0.2;
+  }
+
+  75% {
+    opacity: 0.5;
+  }
+
+  90% {
+    opacity: 1;
+    transform: translateX(-20%);
+  }
+
+  100% {
+    transform: translate(0);
+    opacity: 1;
+  }
 }

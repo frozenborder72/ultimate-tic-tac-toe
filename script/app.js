@@ -1,10 +1,3 @@
-/**
- * TODOS
- *  - CHECK IF SLOT IS ALREADY TAKEN
- *  - REMOVE EVENTLISTENERS FROM UNPLAYABLE BOARDS
- */
-
-// DOM SHIT
 const h1 = document.querySelector('h1');
 const restartBtn = document.querySelector('#restart');
 const megaBoardEl = document.querySelector('#mega-board');
@@ -15,18 +8,22 @@ for (let i = 0; i < boardCount; i++) {
   const boardEl = document.createElement('div');
   boardEl.setAttribute('data-index', i + 1);
   boardEl.classList.add('board');
+
   megaBoardEl.appendChild(boardEl);
 }
 
 const domBoards = document.querySelectorAll('.board');
+const domBoardsArray = [...domBoards];
 
 domBoards.forEach(board => {
   for (let i = 0; i < boardCount; i++) {
     const slot = document.createElement('div');
-    slot.classList.add('slot');
+    slot.classList.add('slot', 'hidden');
     board.appendChild(slot);
   }
 });
+
+megaBoardEl.classList.add('slide');
 
 // GAME STATE
 class Player {
@@ -51,8 +48,6 @@ const logicBoards = new Array(boardCount).fill(true).reduce((acc, item, i) => {
   });
 }, []);
 
-console.log(logicBoards);
-
 const winningPossibilities = [
   [0, 1, 2],
   [3, 4, 5],
@@ -68,54 +63,62 @@ const winningPossibilities = [
 const player1 = new Player(0, 'Player 1', 'X');
 const player2 = new Player(1, 'Player 2', 'O');
 
-let player;
 let playBoard = null;
 let logicBoardsAvailable = logicBoards;
-let playableBoards = [...domBoards];
+let playableBoards = domBoardsArray;
+let restarted = false;
+let player;
 
-// EVENT LISTENERS FUCKERY
+// EVENT LISTENERS
 const startGame = () => {
   player = player1;
 
+  animateBoards();
+
+  restartBtn.textContent = 'Restart Game';
+
   playableBoards.forEach((board, index) => {
     [...board.children].forEach((slot, i) => {
-      slot.addEventListener('click', function handleClick() {
-        playBoard = logicBoards[index];
-        playBoard[player.name].choices = [...playBoard[player.name].choices, i];
-        console.log(logicBoards);
-        slot.classList.add('taken');
-        slot.textContent = player.marker;
-        if (checkIfWin(playBoard[player.name].choices)) {
-          player.wins = [...player.wins, index];
-          if (checkIfWin(player.wins)) {
-            console.log('Player won the game');
-            h1.textContent = `${player.name} wins`;
-          } else {
-            slot.parentElement.classList.add('non-playable');
-            console.log(player.wins);
-            playBoard.isPlayable = false;
-            [...board.children].forEach(slot => {
-              console.log(slot);
-              slot.removeEventListener('click', handleClick);
-            });
-            playableBoards = setPlayableBoards([...domBoards]);
-            allPlayable(playableBoards);
-          }
-        } else if (isFullBoard(board)) {
-          playBoard.isPlayable = false;
-          playableBoards = setPlayableBoards([...domBoards]);
-        } else {
-          slot.removeEventListener('click', handleClick);
-          nextBoard(index, i);
-        }
-
-        player = player === player1 ? player2 : player1;
-      });
+      slot.addEventListener(
+        'click',
+        handleClick.bind(null, board, index, slot, i),
+        { once: true }
+      );
     });
   });
 };
 
-restartBtn.addEventListener('click', e => {
+function handleClick(board, index, slot, i) {
+  playBoard = logicBoards[index];
+  playBoard[player.name].choices = [...playBoard[player.name].choices, i];
+  slot.classList.add('taken');
+  slot.innerHTML = player.marker;
+  if (checkIfWin(playBoard[player.name].choices)) {
+    player.wins = [...player.wins, index];
+    if (checkIfWin(player.wins)) {
+      h1.textContent = `${player.name} wins`;
+      animateTitle();
+    } else {
+      slot.parentElement.classList.add('animated');
+      setTimeout(() => {
+        slot.parentElement.classList.remove('animated');
+        playBoard.isPlayable = false;
+        checkIfPlayableAndAddClass(index);
+        playableBoards = setPlayableBoards(domBoardsArray);
+        allPlayable(playableBoards);
+        addRemoveEventListeners();
+      }, 2000);
+    }
+  } else if (isFullBoard(board)) {
+    playBoard.isPlayable = false;
+    playableBoards = setPlayableBoards(domBoardsArray);
+  } else {
+    nextBoard(index, i);
+  }
+  player = player === player1 ? player2 : player1;
+}
+
+restartBtn.addEventListener('click', () => {
   player1.wins = [];
   player2.wins = [];
   logicBoards.forEach(board => {
@@ -131,8 +134,15 @@ restartBtn.addEventListener('click', e => {
     });
   });
   h1.textContent = 'Ultimate Tic Tac Toe';
+  h1.classList.remove('title-bounce');
 
-  setPlayableBoards([...domBoards]);
+  playableBoards.forEach(board => {
+    [...board.children].forEach(slot => {
+      slot.replaceWith(slot.cloneNode());
+    });
+  });
+
+  setPlayableBoards(domBoardsArray);
   startGame();
 });
 
@@ -140,14 +150,17 @@ const nextBoard = (i, index) => {
   if (i !== index) {
     if (existsPlayBoard(index)) {
       playBoard = logicBoards[index];
-      selectAllButOne([...domBoards], index, 'add', 'remove');
+      selectAllButOne(domBoardsArray, index, 'add', 'remove');
+      addRemoveEventListeners();
     } else {
       allPlayable(playableBoards);
-      [...domBoards][i].classList.add('non-playable');
+      domBoardsArray[i].classList.add('non-playable');
+      addRemoveEventListeners();
     }
   } else {
     allPlayable(playableBoards);
-    [...domBoards][i].classList.add('non-playable');
+    domBoardsArray[i].classList.add('non-playable');
+    addRemoveEventListeners();
   }
 };
 
@@ -157,9 +170,6 @@ const checkIfWin = playerArray =>
   ).length > 0;
 
 // UTILITY FUNCTIONS
-const isFullBoard = board =>
-  [...board.children].every(slot => slot.classList.contains('taken'));
-
 const setPlayableBoards = boards => {
   logicBoardsAvailable = logicBoards.filter(board => board.isPlayable);
   const playableBoardsIds = logicBoardsAvailable.map(board => board.id);
@@ -169,18 +179,69 @@ const setPlayableBoards = boards => {
   );
 };
 
+const existsPlayBoard = index =>
+  logicBoardsAvailable.some(board => board.id === index + 1);
+tyju;
+
+const isFullBoard = board =>
+  [...board.children].every(slot => slot.classList.contains('taken'));
+
 const allPlayable = boards =>
   boards.forEach(board => {
     board.classList.remove('non-playable');
   });
+
+const checkIfPlayableAndAddClass = index => {
+  logicBoards[index].isPlayable === false &&
+    domBoards[index].classList.add('non-playable');
+};
 
 const selectAllButOne = (playBoard, index, action1, action2) => {
   playBoard.forEach(board => board.classList[action1]('non-playable'));
   playBoard[index].classList[action2]('non-playable');
 };
 
-const existsPlayBoard = index =>
-  logicBoardsAvailable.some(board => board.id === index + 1);
+const addRemoveEventListeners = () => {
+  domBoardsArray.forEach(board => {
+    [...board.children].forEach(slot => {
+      slot.replaceWith(slot.cloneNode(true));
+    });
+  });
+
+  domBoardsArray.forEach((board, index) => {
+    [...board.children].forEach((slot, i) => {
+      slot.addEventListener(
+        'click',
+        handleClick.bind(null, board, index, slot, i),
+        { once: true }
+      );
+    });
+  });
+
+  domBoardsArray
+    .filter(board => board.classList.contains('non-playable'))
+    .forEach(board => {
+      [...board.children].forEach(slot => {
+        slot.replaceWith(slot.cloneNode(true));
+      });
+    });
+};
+
+// animation functions
+const animateBoards = () => {
+  let index = 0;
+  setInterval(() => {
+    if (index < domBoards.length) {
+      for (let i = 0; i < domBoards[index].children.length; i++) {
+        domBoards[index].children[i].classList.remove('hidden');
+      }
+      index++;
+    }
+  }, 200);
+};
+
+const animateTitle = () => {
+  h1.classList.add('title-bounce');
+};
 
 allPlayable(playableBoards);
-startGame();
