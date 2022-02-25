@@ -181,7 +181,6 @@ const setPlayableBoards = boards => {
 
 const existsPlayBoard = index =>
   logicBoardsAvailable.some(board => board.id === index + 1);
-tyju;
 
 const isFullBoard = board =>
   [...board.children].every(slot => slot.classList.contains('taken'));
