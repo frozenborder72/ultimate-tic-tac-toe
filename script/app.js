@@ -35,7 +35,7 @@ class Player {
   }
 }
 
-const logicBoards = new Array(boardCount).fill(true).reduce((acc, item, i) => {
+const logicBoards = new Array(boardCount).fill(true).reduce((acc, _, i) => {
   return acc.concat({
     id: i + 1,
     'Player 1': {
